@@ -43,14 +43,4 @@ Method Overriding: Customizing inherited behavior.
 
 Multiple Inheritance: Inheriting from more than one class.
 
-Author: [Your Name]
-Status: Completed
 
-How to use this README:
-Open your README.md file in VS Code or any text editor.
-
-Copy and paste the text above.
-
-Save the file.
-
-Run git add README.md, git commit -m "Update README", and git push to see it beautifully rendered on GitHub.
