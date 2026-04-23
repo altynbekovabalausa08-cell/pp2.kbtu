@@ -1,4 +1,4 @@
-Practice 10 – Pygame Projects
+**Practice 10 – Pygame Projects**
 This folder has three games made with Python and Pygame: Paint, Racer, and Snake.
 
 Racer needs an images folder in the same place as racer.py with these files: way.png, car.png, enemy_car.png, coin.png, game_over.jpeg.
