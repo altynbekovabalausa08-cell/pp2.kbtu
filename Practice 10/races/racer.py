@@ -14,30 +14,32 @@ pygame.display.set_caption("Racer")
 bg = pygame.image.load("images/way.png")
 bg = pygame.transform.scale(bg, (width, height))
 
-# Score and level variables
-score = 0
-level = 1
-enemy_speed_boost = 0  # Speed increases as level goes up
+game_over_img = pygame.image.load("images/game_over.jpeg")
+game_over_img = pygame.transform.scale(game_over_img, (width, height))
 
 font = pygame.font.Font(None, 41)
 
 
 class EnemyCar(pygame.sprite.Sprite):
-    def __init__(self):
+    def __init__(self, speed_boost=0):
         super().__init__()
         self.image = pygame.image.load("images/enemy_car.png")
         self.image = pygame.transform.scale(self.image, (80, 170))
         self.rect = self.image.get_rect()
+        # Smaller hitbox so collision only happens when cars truly overlap
+        self.hitbox = pygame.Rect(0, 0, 48, 110)
+        self.speed_boost = speed_boost
         self.reset()
 
     def reset(self):
-        # Place enemy at a random x position above the screen
-        self.rect.center = (random.randint(50, width - 50), -50)
-        self.speed = random.randint(6, 8) + enemy_speed_boost
+        self.rect.center = (random.randint(60, width - 60), -50)
+        self.speed = random.randint(6, 8) + self.speed_boost
+        self.hitbox.center = self.rect.center
 
     def move_ecar(self):
         self.rect.y += self.speed
-        # When enemy goes off screen, send it back to the top
+        # Keep the small hitbox centered on the image every frame
+        self.hitbox.center = self.rect.center
         if self.rect.y > height:
             self.reset()
 
@@ -55,7 +57,6 @@ class Coin(pygame.sprite.Sprite):
         self.random_place()
 
     def random_place(self):
-        # Place coin at a random position above the screen
         self.rect.center = (random.randint(30, width - 30), random.randint(-300, -50))
 
     def move_coin(self):
@@ -74,21 +75,51 @@ class Car(pygame.sprite.Sprite):
         self.image = pygame.transform.scale(self.image, (120, 150))
         self.rect = self.image.get_rect()
         self.rect.center = (width // 2, 620)
+        # Smaller hitbox for the player car too
+        self.hitbox = pygame.Rect(0, 0, 70, 110)
+        self.hitbox.center = self.rect.center
 
     def move_car(self, keys):
         if keys[K_LEFT] and self.rect.left > 10:
             self.rect.x -= 10
         if keys[K_RIGHT] and self.rect.right < width - 10:
             self.rect.x += 10
+        self.hitbox.center = self.rect.center
 
     def draw(self):
         screen.blit(self.image, self.rect)
 
 
-# Create player car, 3 enemy cars, and 3 coins
-player_car = Car()
-enemies = [EnemyCar(), EnemyCar(), EnemyCar()]
-coins = [Coin(), Coin(), Coin()]
+def reset_game():
+    # Reset all game objects and variables to start a new game
+    player_car = Car()
+    enemies = [EnemyCar(), EnemyCar()]   # 2 enemies instead of 3
+    coins = [Coin(), Coin(), Coin()]
+    return player_car, enemies, coins, 0, 1, 0
+
+
+def show_game_over(score, level):
+    screen.blit(game_over_img, (0, 0))
+    final_text = font.render(f"Score: {score}  Lvl: {level}", True, (255, 255, 255))
+    screen.blit(final_text, (width // 2 - 80, height // 2 + 60))
+    hint = pygame.font.Font(None, 28).render("SPACE - play again   ESC - quit", True, (255, 255, 255))
+    screen.blit(hint, (width // 2 - 140, height // 2 + 110))
+    pygame.display.update()
+
+    while True:
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                pygame.quit()
+                sys.exit()
+            if event.type == pygame.KEYDOWN:
+                if event.key == pygame.K_SPACE:
+                    return
+                if event.key == pygame.K_ESCAPE:
+                    pygame.quit()
+                    sys.exit()
+
+
+player_car, enemies, coins, score, level, enemy_speed_boost = reset_game()
 
 flag = True
 while flag:
@@ -100,19 +131,17 @@ while flag:
             pygame.quit()
             sys.exit()
 
-    # Move and draw all enemies
     for enemy in enemies:
         enemy.move_ecar()
         enemy.draw_ecar()
 
-    # Move and draw all coins
     for coin in coins:
         coin.move_coin()
         coin.draw_coin()
 
-    # Check if player collected a coin
+    # Check coin collection
     for coin in coins:
-        if player_car.rect.colliderect(coin.rect):
+        if player_car.hitbox.colliderect(coin.rect):
             score += 1
             coin.random_place()
 
@@ -121,32 +150,20 @@ while flag:
     if new_level > level:
         level = new_level
         enemy_speed_boost += 1
-        # Apply new speed to all enemies
         for enemy in enemies:
             enemy.speed = random.randint(6, 8) + enemy_speed_boost
 
-    # Check if player hit any enemy car
+    # Use small hitboxes for collision — feels fair to the player
     for enemy in enemies:
-        if player_car.rect.colliderect(enemy.rect):
-            h = pygame.image.load("images/game_over.jpeg")
-            h = pygame.transform.scale(h, (width, height))
-            screen.blit(h, (0, 0))
-            # Show final score on game over screen
-            final_text = font.render(f"Score: {score}", True, (255, 255, 255))
-            screen.blit(final_text, (width // 2 - 60, height // 2 + 60))
-            pygame.display.update()
-            # Wait for player to close the window
-            while True:
-                for event in pygame.event.get():
-                    if event.type == pygame.QUIT:
-                        pygame.quit()
-                        sys.exit()
+        if player_car.hitbox.colliderect(enemy.hitbox):
+            show_game_over(score, level)
+            player_car, enemies, coins, score, level, enemy_speed_boost = reset_game()
+            break
 
     keys = pygame.key.get_pressed()
     player_car.move_car(keys)
     player_car.draw()
 
-    # Show score and level in the top right corner
     score_text = font.render(f"Score: {score}  Lvl: {level}", True, (128, 52, 36))
     score_rect = score_text.get_rect(topright=(width - 10, 10))
     screen.blit(score_text, score_rect)

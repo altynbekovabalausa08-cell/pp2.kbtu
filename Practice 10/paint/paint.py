@@ -6,33 +6,36 @@ HEIGHT = 600
 screen = pygame.display.set_mode((WIDTH, HEIGHT))
 pygame.display.set_caption("Paint")
 
-# Colors we use in the app
-PINK = (255, 192, 203)
-PURPLE = (160, 32, 240)
-RED = (200, 0, 0)
-GREEN = (0, 200, 0)
-BLUE = (0, 0, 200)
-WHITE = (255, 255, 255)
+# Colors
+PINK         = (255, 192, 203)
+PURPLE       = (160, 32, 240)
+RED          = (200, 0, 0)
+GREEN        = (0, 200, 0)
+BLUE         = (0, 0, 200)
+WHITE        = (255, 255, 255)
 ERASER_COLOR = PINK
 
-pen_radius = 7
-mode = 'pen'
-color = PURPLE
-drawing = False
-start_pos = None
-
+PEN_RADIUS = 7
 font = pygame.font.Font(None, 20)
 
-# We draw on a separate surface (canvas), not on the screen directly.
-# This fixes the bug: buttons stay visible even when user draws over them.
+# We store color, mode, and drawing state in a dictionary.
+# This way we can change them anywhere in the code without 'global' issues.
+state = {
+    "color":     PURPLE,
+    "mode":      "pen",
+    "drawing":   False,
+    "start_pos": None,
+}
+
+# We draw on a separate surface so buttons always stay visible on top
 canvas = pygame.Surface((WIDTH, HEIGHT))
 canvas.fill(PINK)
 
-# Buttons placed on the left side
+# Buttons on the left side
 button_rects = {
-    "Red":    pygame.Rect(10, 10, 70, 30),
-    "Green":  pygame.Rect(10, 50, 70, 30),
-    "Blue":   pygame.Rect(10, 90, 70, 30),
+    "Red":    pygame.Rect(10, 10,  70, 30),
+    "Green":  pygame.Rect(10, 50,  70, 30),
+    "Blue":   pygame.Rect(10, 90,  70, 30),
     "Eraser": pygame.Rect(10, 130, 70, 30),
     "Circle": pygame.Rect(10, 170, 70, 30),
     "Rect":   pygame.Rect(10, 210, 70, 30),
@@ -41,14 +44,14 @@ button_rects = {
 
 def draw_buttons():
     for name, rect in button_rects.items():
-        # Highlight the active button with filled purple
+        # Highlight the active button with a filled purple background
         active = (
-            (name == "Red"    and color == RED    and mode == 'pen') or
-            (name == "Green"  and color == GREEN  and mode == 'pen') or
-            (name == "Blue"   and color == BLUE   and mode == 'pen') or
-            (name == "Eraser" and mode == 'eraser') or
-            (name == "Circle" and mode == 'circle') or
-            (name == "Rect"   and mode == 'rectangle')
+            (name == "Red"    and state["color"] == RED   and state["mode"] == "pen") or
+            (name == "Green"  and state["color"] == GREEN and state["mode"] == "pen") or
+            (name == "Blue"   and state["color"] == BLUE  and state["mode"] == "pen") or
+            (name == "Eraser" and state["mode"] == "eraser") or
+            (name == "Circle" and state["mode"] == "circle") or
+            (name == "Rect"   and state["mode"] == "rectangle")
         )
         if active:
             pygame.draw.rect(screen, PURPLE, rect)
@@ -66,94 +69,91 @@ def get_button_clicked(pos):
     return None
 
 def is_on_button(pos):
-    # Returns True if the mouse is over any button
+    # Returns True if the position is inside any button
     for rect in button_rects.values():
         if rect.collidepoint(pos):
             return True
     return False
 
-def clear_screen():
-    canvas.fill(PINK)
-
-flag = True
-while flag:
+running = True
+while running:
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
-            flag = False
+            running = False
 
         elif event.type == pygame.MOUSEBUTTONDOWN:
             if event.button == 1:
-                clicked_button = get_button_clicked(event.pos)
-                # Change color or mode based on which button is clicked
-                if clicked_button == "Red":
-                    color = RED
-                    mode = 'pen'
-                elif clicked_button == "Green":
-                    color = GREEN
-                    mode = 'pen'
-                elif clicked_button == "Blue":
-                    color = BLUE
-                    mode = 'pen'
-                elif clicked_button == "Eraser":
-                    mode = 'eraser'
-                elif clicked_button == "Circle":
-                    mode = 'circle'
-                elif clicked_button == "Rect":
-                    mode = 'rectangle'
-                elif clicked_button == "Clear":
-                    clear_screen()
+                clicked = get_button_clicked(event.pos)
+                # Change color or mode depending on which button was clicked
+                if clicked == "Red":
+                    state["color"] = RED
+                    state["mode"]  = "pen"
+                elif clicked == "Green":
+                    state["color"] = GREEN
+                    state["mode"]  = "pen"
+                elif clicked == "Blue":
+                    state["color"] = BLUE
+                    state["mode"]  = "pen"
+                elif clicked == "Eraser":
+                    state["mode"] = "eraser"
+                elif clicked == "Circle":
+                    state["mode"] = "circle"
+                elif clicked == "Rect":
+                    state["mode"] = "rectangle"
+                elif clicked == "Clear":
+                    canvas.fill(PINK)
                 else:
                     # Start drawing only if user clicked outside the buttons
-                    start_pos = event.pos
-                    drawing = True
+                    state["start_pos"] = event.pos
+                    state["drawing"]   = True
 
         elif event.type == pygame.MOUSEBUTTONUP:
             if event.button == 1:
-                if drawing and start_pos is not None:
+                if state["drawing"] and state["start_pos"] is not None:
                     end_pos = event.pos
-                    # Shapes are drawn on canvas when the mouse button is released
-                    if mode == 'rectangle':
-                        x = min(start_pos[0], end_pos[0])
-                        y = min(start_pos[1], end_pos[1])
-                        w = abs(end_pos[0] - start_pos[0])
-                        h = abs(end_pos[1] - start_pos[1])
-                        pygame.draw.rect(canvas, color, (x, y, w, h), 2)
-                    elif mode == 'circle':
-                        center = ((start_pos[0] + end_pos[0]) // 2,
-                                  (start_pos[1] + end_pos[1]) // 2)
-                        r = max(abs(end_pos[0] - start_pos[0]),
-                                abs(end_pos[1] - start_pos[1])) // 2
-                        pygame.draw.circle(canvas, color, center, r, 2)
-                drawing = False
-                start_pos = None
+                    # Draw the final shape on the canvas when mouse is released
+                    if state["mode"] == "rectangle":
+                        x = min(state["start_pos"][0], end_pos[0])
+                        y = min(state["start_pos"][1], end_pos[1])
+                        w = abs(end_pos[0] - state["start_pos"][0])
+                        h = abs(end_pos[1] - state["start_pos"][1])
+                        pygame.draw.rect(canvas, state["color"], (x, y, w, h), 2)
+                    elif state["mode"] == "circle":
+                        cx = (state["start_pos"][0] + end_pos[0]) // 2
+                        cy = (state["start_pos"][1] + end_pos[1]) // 2
+                        r  = max(abs(end_pos[0] - state["start_pos"][0]),
+                                 abs(end_pos[1] - state["start_pos"][1])) // 2
+                        pygame.draw.circle(canvas, state["color"], (cx, cy), r, 2)
+                state["drawing"]   = False
+                state["start_pos"] = None
 
         elif event.type == pygame.MOUSEMOTION:
-            if drawing:
+            if state["drawing"]:
                 x, y = event.pos
-                # Pen and eraser draw on canvas while mouse moves (not on buttons)
-                if mode == 'pen' and not is_on_button((x, y)):
-                    pygame.draw.circle(canvas, color, (x, y), pen_radius)
-                elif mode == 'eraser' and not is_on_button((x, y)):
-                    pygame.draw.circle(canvas, ERASER_COLOR, (x, y), pen_radius)
+                # Pen and eraser draw continuously while the mouse moves
+                if state["mode"] == "pen" and not is_on_button((x, y)):
+                    pygame.draw.circle(canvas, state["color"], (x, y), PEN_RADIUS)
+                elif state["mode"] == "eraser" and not is_on_button((x, y)):
+                    pygame.draw.circle(canvas, ERASER_COLOR, (x, y), PEN_RADIUS)
 
-    # First draw the canvas (all user drawings), then buttons on top
+    # Draw canvas first, then buttons on top so they are always visible
     screen.blit(canvas, (0, 0))
 
-    # Show a live preview of rectangle/circle while the user is still dragging
-    if drawing and start_pos is not None and mode in ('rectangle', 'circle'):
+    # Show a live preview of the shape while the user is dragging
+    if state["drawing"] and state["start_pos"] and state["mode"] in ("rectangle", "circle"):
         cur = pygame.mouse.get_pos()
-        if mode == 'rectangle':
-            x = min(start_pos[0], cur[0])
-            y = min(start_pos[1], cur[1])
-            w = abs(cur[0] - start_pos[0])
-            h = abs(cur[1] - start_pos[1])
-            pygame.draw.rect(screen, color, (x, y, w, h), 2)
-        elif mode == 'circle':
-            center = ((start_pos[0] + cur[0]) // 2,
-                      (start_pos[1] + cur[1]) // 2)
-            r = max(abs(cur[0] - start_pos[0]),
-                    abs(cur[1] - start_pos[1])) // 2
-            pygame.draw.circle(screen, color, center, r, 2)
+        if state["mode"] == "rectangle":
+            x = min(state["start_pos"][0], cur[0])
+            y = min(state["start_pos"][1], cur[1])
+            w = abs(cur[0] - state["start_pos"][0])
+            h = abs(cur[1] - state["start_pos"][1])
+            pygame.draw.rect(screen, state["color"], (x, y, w, h), 2)
+        elif state["mode"] == "circle":
+            cx = (state["start_pos"][0] + cur[0]) // 2
+            cy = (state["start_pos"][1] + cur[1]) // 2
+            r  = max(abs(cur[0] - state["start_pos"][0]),
+                     abs(cur[1] - state["start_pos"][1])) // 2
+            pygame.draw.circle(screen, state["color"], (cx, cy), r, 2)
 
     draw_buttons()
     pygame.display.flip()
