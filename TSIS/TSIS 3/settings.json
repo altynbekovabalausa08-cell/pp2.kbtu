@@ -1,0 +1,8 @@
+{
+  "music_volume": 50,
+  "sfx_volume": 100,
+  "car_color": "default",
+  "difficulty": "easy",
+  "username": "me",
+  "sound": false
+}

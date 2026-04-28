@@ -1,0 +1,102 @@
+[
+  {
+    "name": "Aigerim Zhumanova",
+    "email": "aigerim@mail.ru",
+    "birthday": "1988-01-30",
+    "group": "Friend",
+    "phones": [
+      {
+        "phone": "+7-707-567-8901",
+        "type": "mobile"
+      }
+    ]
+  },
+  {
+    "name": "Amir Seitkali",
+    "email": "amir@gmail.com",
+    "birthday": "1990-03-15",
+    "group": "Family",
+    "phones": [
+      {
+        "phone": "+7-701-234-5678",
+        "type": "mobile"
+      },
+      {
+        "phone": "+7 701 999 000",
+        "type": "work"
+      }
+    ]
+  },
+  {
+    "name": "Berik Dzhaksybekov",
+    "email": "berik@work.com",
+    "birthday": "1987-12-25",
+    "group": "Work",
+    "phones": [
+      {
+        "phone": "+7-705-901-2345",
+        "type": "work"
+      }
+    ]
+  },
+  {
+    "name": "Dana Nurlanova",
+    "email": "dana@work.com",
+    "birthday": "1985-07-22",
+    "group": "Work",
+    "phones": [
+      {
+        "phone": "+7-702-345-6789",
+        "type": "work"
+      }
+    ]
+  },
+  {
+    "name": "Madina Seidullayeva",
+    "email": null,
+    "birthday": "1980-09-05",
+    "group": "Family",
+    "phones": [
+      {
+        "phone": "+7-701-789-0123",
+        "type": "home"
+      }
+    ]
+  },
+  {
+    "name": "Nursultan Akhmetov",
+    "email": "nursultan@company.com",
+    "birthday": "1995-06-18",
+    "group": "Work",
+    "phones": [
+      {
+        "phone": "+7-708-678-9012",
+        "type": "work"
+      }
+    ]
+  },
+  {
+    "name": "Yerlan Bekov",
+    "email": "yerlan@gmail.com",
+    "birthday": "1992-11-08",
+    "group": "Family",
+    "phones": [
+      {
+        "phone": "+7-705-456-7890",
+        "type": "home"
+      }
+    ]
+  },
+  {
+    "name": "Zarina Kasymova",
+    "email": "zarina@gmail.com",
+    "birthday": "1993-04-12",
+    "group": "Other",
+    "phones": [
+      {
+        "phone": "+7-702-890-1234",
+        "type": "mobile"
+      }
+    ]
+  }
+]
